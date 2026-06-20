@@ -18,7 +18,7 @@
 
 ## ✨ What is DeepKi?
 
-DeepKi is a **full-featured black-box web security testing platform** with a kawaii pink aesthetic. Xiao Qi (the mascot) automates the boring parts of penetration testing so you can focus on what matters — finding real vulnerabilities.
+DeepKi is a **full-featured black-box web security testing platform**. It automates the boring parts of penetration testing — subdomain enumeration, directory brute-forcing, vulnerability scanning, header auditing, CORS testing, 403 bypass, and more — so you can focus on what matters: finding real vulnerabilities.
 
 ### 🧩 Scan Modules
 
