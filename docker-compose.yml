@@ -1,0 +1,33 @@
+# (●°u°●)​ 」 DeepKi Docker Compose
+# One command to bring Xiao Qi to life~
+
+version: "3.9"
+
+services:
+  deepki:
+    build: .
+    container_name: deepki-scanner
+    ports:
+      - "5000:5000"
+    environment:
+      - DEEPKI_HOST=0.0.0.0
+      - DEEPKI_PORT=5000
+      - DEEPKI_DEBUG=false
+      - DEEPKI_CONCURRENT=50
+      - DEEPKI_TIMEOUT=10
+      - DEEPKI_DB=sqlite+aiosqlite:///app/deepki.db
+    volumes:
+      - ./deepki.db:/app/deepki.db
+      - ./results:/app/results
+      - ./wordlists:/app/wordlists:ro
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:5000/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
