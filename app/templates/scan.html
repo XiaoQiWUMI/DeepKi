@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+{% block title %}New Scan — DeepKi{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="page-header">
+        <h1>▶️ Start a Scan</h1>
+        <p class="text-muted">(●°u°●)​ 」 Xiao Qi received! Sending paws to the target~</p>
+    </div>
+
+    <!-- Scan Config -->
+    <div class="card" id="scan-config">
+        <h3 class="card-title">⚙️ Scan Configuration</h3>
+        <form hx-post="/scans/start" hx-target="#scan-result" hx-swap="innerHTML"
+              id="scan-form">
+            <div class="form-group">
+                <label for="target_id">🎯 Select Target</label>
+                <select id="target_id" name="target_id" required class="form-input"
+                        hx-get="/targets/options" hx-trigger="load"
+                        hx-target="#target_id" hx-swap="innerHTML">
+                    <option value="">Loading targets... >_<</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>📦 Scan Mode</label>
+                <div class="mode-selector">
+                    <label class="mode-option">
+                        <input type="radio" name="mode" value="full" checked>
+                        <span class="mode-badge">🔬 Full Scan</span>
+                        <small>All modules, thorough</small>
+                    </label>
+                    <label class="mode-option">
+                        <input type="radio" name="mode" value="quick">
+                        <span class="mode-badge">⚡ Quick Scan</span>
+                        <small>Essentials only, fast</small>
+                    </label>
+                    <label class="mode-option">
+                        <input type="radio" name="mode" value="custom">
+                        <span class="mode-badge">🎛️ Custom</span>
+                        <small>Pick your modules</small>
+                    </label>
+                </div>
+            </div>
+
+            <div class="form-group" id="module-select" style="display:none">
+                <label>🧩 Modules</label>
+                <div class="module-grid">
+                    {% set modules = [
+                        ('subdomain', '🔍', 'Subdomain', 'DNS + CT logs'),
+                        ('portscan', '🔌', 'Port Scan', 'TCP connect'),
+                        ('directory', '📁', 'Directory', 'Brute-force paths'),
+                        ('tech_detect', '🖥️', 'Tech Detect', 'Fingerprint stack'),
+                        ('vuln_scan', '💉', 'Vulnerability', 'SQLi/XSS/SSTI/SSRF/LFI'),
+                        ('header_audit', '📋', 'Headers', 'Security headers + cookies'),
+                        ('cors_test', '🌐', 'CORS', 'Misconfig test'),
+                        ('port_knock', '🚪', '403 Bypass', 'Path/header/method tricks'),
+                    ] %}
+                    {% for name, icon, label, desc in modules %}
+                    <label class="module-check">
+                        <input type="checkbox" name="modules" value="{{ name }}" checked>
+                        <span class="module-label">
+                            <span class="module-icon">{{ icon }}</span>
+                            <strong>{{ label }}</strong>
+                            <small>{{ desc }}</small>
+                        </span>
+                    </label>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-lg" id="scan-btn">
+                (●°u°●)​ 」 Launch Scan!
+            </button>
+        </form>
+    </div>
+
+    <!-- Scan Progress -->
+    <div id="scan-result"></div>
+</div>
+
+<style>
+.page-container { max-width: 900px; margin: 0 auto; }
+.page-header { margin-bottom: 2rem; }
+
+.mode-selector {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+.mode-option {
+    flex: 1;
+    min-width: 150px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 1rem;
+    border: 2px solid var(--border);
+    border-radius: 1rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+}
+.mode-option:hover { border-color: var(--pink); }
+.mode-option:has(input:checked) {
+    border-color: var(--pink);
+    background: var(--pink-bg);
+}
+.mode-option input { display: none; }
+.mode-badge { font-weight: 700; font-size: 1rem; }
+.mode-option small { color: var(--text-muted); font-size: 0.8rem; }
+
+.module-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem;
+}
+@media (max-width: 600px) { .module-grid { grid-template-columns: 1fr; } }
+.module-check {
+    display: flex;
+    align-items: center;
+    padding: 0.6rem 0.8rem;
+    border: 1px solid var(--border);
+    border-radius: 0.5rem;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+.module-check:hover { background: var(--surface-hover); }
+.module-check:has(input:checked) { border-color: var(--pink-light); background: var(--pink-bg); }
+.module-check input { margin-right: 0.5rem; accent-color: var(--pink); }
+.module-label { display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap; }
+.module-icon { font-size: 1.2rem; }
+.module-label strong { font-size: 0.9rem; }
+.module-label small { color: var(--text-muted); font-size: 0.75rem; }
+</style>
+
+<script>
+// Show custom modules when custom mode selected
+document.querySelectorAll('input[name="mode"]').forEach(r => {
+    r.addEventListener('change', () => {
+        const custom = document.querySelector('input[name="mode"]:checked').value === 'custom';
+        document.getElementById('module-select').style.display = custom ? 'block' : 'none';
+    });
+});
+</script>
+{% endblock %}

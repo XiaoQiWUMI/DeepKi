@@ -1,0 +1,67 @@
+{# DeepKi Toast Notification — HTMX Partial #}
+<div class="toast toast-{{ type or 'info' }}" role="alert">
+    <span class="toast-icon">
+        {% if type == 'success' %}~_^
+        {% elif type == 'error' %}T^T
+        {% elif type == 'warning' %}>_<
+        {% else %}^ - ^{% endif %}
+    </span>
+    <span class="toast-message">{{ message }}</span>
+    <button class="toast-close" onclick="this.parentElement.remove()">×</button>
+</div>
+
+<style>
+.toast {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.8rem 1.2rem;
+    border-radius: 0.75rem;
+    font-size: 0.9rem;
+    font-weight: 500;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    animation: slideIn 0.3s ease;
+    margin-bottom: 0.5rem;
+}
+@keyframes slideIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.toast-fade {
+    opacity: 0;
+    transform: translateX(20px);
+    transition: all 0.3s ease;
+}
+.toast-success {
+    background: #e8f5e9;
+    border: 1px solid #a5d6a7;
+    color: #2e7d32;
+}
+.toast-error {
+    background: #fce4ec;
+    border: 1px solid #ef9a9a;
+    color: #c62828;
+}
+.toast-warning {
+    background: #fff3e0;
+    border: 1px solid #ffcc80;
+    color: #e65100;
+}
+.toast-info {
+    background: #e3f2fd;
+    border: 1px solid #90caf9;
+    color: #1565c0;
+}
+.toast-close {
+    margin-left: auto;
+    background: none;
+    border: none;
+    font-size: 1.2rem;
+    cursor: pointer;
+    color: inherit;
+    opacity: 0.5;
+    padding: 0;
+    line-height: 1;
+}
+.toast-close:hover { opacity: 1; }
+</style>

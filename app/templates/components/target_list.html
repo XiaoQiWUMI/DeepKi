@@ -1,0 +1,92 @@
+{# DeepKi Target List — HTMX Partial #}
+{% if targets %}
+<div class="target-list">
+    {% for t in targets %}
+    <div class="target-item" id="target-{{ t.id }}">
+        <div class="target-info">
+            <span class="target-url">{{ t.url }}</span>
+            {% if t.label %}
+            <span class="target-label">{{ t.label }}</span>
+            {% endif %}
+        </div>
+        <div class="target-meta">
+            <span class="target-scans">🔄 {{ t.scan_count or 0 }} scans</span>
+            {% if t.last_scan_at %}
+            <span class="target-last">🕐 {{ t.last_scan_at.strftime('%m/%d %H:%M') }}</span>
+            {% endif %}
+        </div>
+        <div class="target-actions">
+            <button class="btn btn-sm btn-primary"
+                    hx-post="/scans/start"
+                    hx-vals='{"target_id": "{{ t.id }}", "mode": "quick"}'
+                    hx-target="#scan-result"
+                    hx-swap="innerHTML">
+                ⚡ Quick
+            </button>
+            <button class="btn btn-sm btn-outline"
+                    onclick="document.getElementById('scan-target').value='{{ t.id }}'; window.location.href='/scans/new'">
+                ▶️ Full
+            </button>
+            <button class="btn btn-sm btn-danger"
+                    hx-delete="/targets/{{ t.id }}"
+                    hx-target="#target-list"
+                    hx-swap="innerHTML"
+                    hx-confirm="Delete {{ t.url }}?">
+                🗑️
+            </button>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="empty-state">
+    <div class="empty-emoji">^ - ^</div>
+    <p>No targets yet~ Add one above!</p>
+</div>
+{% endif %}
+
+<style>
+.target-list { display: flex; flex-direction: column; gap: 0.5rem; }
+.target-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.8rem 1rem;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 0.75rem;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+.target-info { display: flex; align-items: center; gap: 0.5rem; flex: 1; min-width: 200px; }
+.target-url {
+    font-family: monospace;
+    font-size: 0.9rem;
+    word-break: break-all;
+}
+.target-label {
+    font-size: 0.75rem;
+    padding: 0.15rem 0.5rem;
+    background: var(--pink-bg);
+    color: var(--pink-dark);
+    border-radius: 0.3rem;
+    white-space: nowrap;
+}
+.target-meta {
+    display: flex;
+    gap: 1rem;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+.target-actions {
+    display: flex;
+    gap: 0.3rem;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 2rem;
+    color: var(--text-muted);
+}
+.empty-emoji { font-size: 2rem; }
+</style>

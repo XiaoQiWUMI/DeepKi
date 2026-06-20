@@ -1,0 +1,273 @@
+{# DeepKi Live Scan Progress — HTMX Partial #}
+<div class="scan-progress-card" id="scan-progress-{{ scan_id }}">
+
+    <!-- Phase indicator -->
+    <div class="progress-phase">
+        {% set emojis = {'info': '(●°u°●)​ 」', 'vuln': '>_<', 'verify': '~_^', 'report': '^ - ^'} %}
+        {% set messages = {
+            'info': 'Xiao Qi is sniffing...',
+            'vuln': 'digging deep into vulnerabilities...',
+            'verify': 'poking carefully to verify...',
+            'report': 'Baking the report...',
+        } %}
+        {% set phase = progress.phase if progress else 'info' %}
+        <span class="phase-emoji">{{ emojis.get(phase, '(●°u°●)​ 」') }}</span>
+        <span class="phase-msg">{{ messages.get(phase, 'Working...') }}</span>
+    </div>
+
+    <!-- Overall Progress Bar -->
+    {% if progress %}
+    <div class="progress-bar-container">
+        <div class="progress-bar">
+            <div class="progress-fill" style="width: {{ progress.overall_percent }}%">
+                {% if progress.overall_percent > 10 %}
+                <span class="progress-text">{{ progress.overall_percent }}%</span>
+                {% endif %}
+            </div>
+        </div>
+        <div class="progress-stats">
+            <span>{{ progress.overall_percent }}%</span>
+            <span>{{ progress.findings|length }} findings</span>
+        </div>
+    </div>
+
+    <!-- Module Progress -->
+    <div class="module-progress-list">
+        {% for name, mp in progress.modules.items() %}
+        <div class="module-progress-item {% if mp.status == 'running' %}active{% elif mp.status == 'done' %}done{% endif %}">
+            <span class="mp-icon">{{ mp.icon }}</span>
+            <span class="mp-label">{{ mp.label }}</span>
+            <div class="mp-bar">
+                <div class="mp-fill" style="width: {{ mp.percent }}%"></div>
+            </div>
+            <span class="mp-pct">{{ mp.percent }}%</span>
+            <span class="mp-status">
+                {% if mp.status == 'running' %}>_<
+                {% elif mp.status == 'done' %}~_^
+                {% elif mp.status == 'failed' %}T^T
+                {% else %}...{% endif %}
+            </span>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Live Findings -->
+    {% if progress.findings %}
+    <div class="live-findings">
+        <h4>~_^ Found {{ progress.findings|length }} vulnerabilities so far</h4>
+        {% set sev_icons = {'critical': '💀', 'high': '🔴', 'medium': '🟡', 'low': '🟢', 'info': '🔵'} %}
+        {% for f in progress.findings[-8:]|reverse %}
+        <div class="live-finding-row {{ f.severity }}">
+            <span class="lf-sev">{{ sev_icons.get(f.severity, '⚪') }}</span>
+            <span class="lf-badge">{{ f.severity[:4].upper() }}</span>
+            <span class="lf-title">{{ f.title[:60] }}</span>
+            {% if f.verified %}<span class="lf-verified">✓</span>{% endif %}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Completion State -->
+    {% if progress.status == 'completed' %}
+    <div class="scan-complete">
+        <div class="complete-emoji">♪───Ｏ（≧∇≦）Ｏ────♪</div>
+        <h3>Scan Complete!</h3>
+        <div class="complete-counts">
+            {% set counts = progress.severity_counts %}
+            <span class="count-badge critical">💀 {{ counts.critical }} Critical</span>
+            <span class="count-badge high">🔴 {{ counts.high }} High</span>
+            <span class="count-badge medium">🟡 {{ counts.medium }} Medium</span>
+            <span class="count-badge low">🟢 {{ counts.low }} Low</span>
+            <span class="count-badge info">🔵 {{ counts.info }} Info</span>
+        </div>
+        <div class="complete-actions">
+            <button class="btn btn-primary"
+                    hx-get="/results/report/{{ scan_id }}"
+                    hx-target="body"
+                    hx-swap="innerHTML">
+                📄 View Full Report
+            </button>
+            <button class="btn btn-outline"
+                    hx-get="/results/scan/{{ scan_id }}"
+                    hx-target="#scan-detail"
+                    hx-swap="innerHTML">
+                📊 View Details
+            </button>
+        </div>
+    </div>
+    {% endif %}
+
+    {% else %}
+    <div class="progress-waiting">
+        <span class="waiting-dots">>_<</span>
+        <p>Initializing scan modules...</p>
+    </div>
+    {% endif %}
+
+    <!-- Auto-refresh while running -->
+    {% if not progress or progress.status == 'running' %}
+    <div hx-get="/scans/{{ scan_id }}/progress" hx-trigger="every 2s" hx-swap="outerHTML"
+         hx-target="#scan-progress-{{ scan_id }}">
+    </div>
+    {% endif %}
+</div>
+
+<style>
+.scan-progress-card {
+    margin-top: 2rem;
+    padding: 1.5rem;
+    background: var(--surface);
+    border-radius: 1.5rem;
+    border: 2px solid var(--pink-light);
+}
+
+.progress-phase {
+    text-align: center;
+    margin-bottom: 1.5rem;
+}
+.phase-emoji {
+    font-size: 1.8rem;
+    display: block;
+    animation: bounce 1.5s infinite;
+}
+@keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-5px); }
+}
+.phase-msg {
+    color: var(--pink);
+    font-weight: 600;
+    font-size: 1rem;
+}
+
+.progress-bar-container { margin-bottom: 1.5rem; }
+.progress-bar {
+    height: 2rem;
+    background: #f0f0f0;
+    border-radius: 1rem;
+    overflow: hidden;
+    position: relative;
+}
+.progress-fill {
+    height: 100%;
+    background: var(--pink-gradient);
+    border-radius: 1rem;
+    transition: width 0.5s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 0;
+}
+.progress-text {
+    color: white;
+    font-weight: 700;
+    font-size: 0.8rem;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+}
+.progress-stats {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 0.3rem;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+
+.module-progress-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+.module-progress-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.4rem 0.6rem;
+    border-radius: 0.5rem;
+    background: var(--bg);
+    transition: background 0.2s;
+}
+.module-progress-item.active { background: #fff0f5; }
+.module-progress-item.done { opacity: 0.7; }
+.mp-icon { font-size: 1.1rem; }
+.mp-label { min-width: 90px; font-size: 0.85rem; font-weight: 500; }
+.mp-bar {
+    flex: 1;
+    height: 6px;
+    background: #e0e0e0;
+    border-radius: 3px;
+    overflow: hidden;
+}
+.mp-fill {
+    height: 100%;
+    background: var(--pink);
+    border-radius: 3px;
+    transition: width 0.3s;
+}
+.mp-pct { font-size: 0.75rem; color: var(--text-muted); min-width: 35px; text-align: right; }
+.mp-status { font-size: 0.9rem; min-width: 30px; text-align: right; }
+
+.live-findings { margin-bottom: 1.5rem; }
+.live-findings h4 {
+    font-size: 0.95rem;
+    color: var(--pink);
+    margin-bottom: 0.8rem;
+}
+.live-finding-row {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.3rem 0;
+    font-size: 0.85rem;
+    border-bottom: 1px solid #f5f5f5;
+}
+.lf-badge {
+    font-size: 0.7rem;
+    padding: 0.1rem 0.4rem;
+    border-radius: 0.3rem;
+    background: #f0f0f0;
+    font-weight: 600;
+}
+.lf-title { flex: 1; }
+.lf-verified { color: #27ae60; font-weight: 700; }
+
+.scan-complete {
+    text-align: center;
+    padding: 2rem 0 1rem;
+    border-top: 2px dashed var(--pink-light);
+}
+.complete-emoji {
+    font-size: 1.8rem;
+    margin-bottom: 0.5rem;
+}
+.scan-complete h3 {
+    color: var(--pink-dark);
+    margin: 0.3rem 0 1rem;
+}
+.complete-counts {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-bottom: 1rem;
+}
+.count-badge {
+    padding: 0.4rem 0.8rem;
+    border-radius: 0.5rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    background: #f5f5f5;
+    border: 1px solid var(--border);
+}
+.complete-actions { display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap; }
+
+.progress-waiting {
+    text-align: center;
+    padding: 2rem;
+}
+.waiting-dots { font-size: 2rem; display: block; animation: pulse 1s infinite; }
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+</style>

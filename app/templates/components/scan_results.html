@@ -1,0 +1,173 @@
+{# DeepKi Scan Results Detail — HTMX Partial #}
+<div class="scan-detail-card">
+    <div class="detail-header">
+        <h3>📊 Scan Results</h3>
+        <div class="detail-meta">
+            <span>🎯 {{ target.url }}</span>
+            <span>📦 {{ scan.mode }}</span>
+            <span>🕐 {{ scan.started_at.strftime('%Y-%m-%d %H:%M') if scan.started_at else '' }}</span>
+        </div>
+    </div>
+
+    <!-- Severity Summary -->
+    <div class="sev-summary">
+        {% set labels = [('💀 Critical', 'critical'), ('🔴 High', 'high'), ('🟡 Medium', 'medium'), ('🟢 Low', 'low'), ('🔵 Info', 'info')] %}
+        {% for label, key in labels %}
+        <div class="sev-chip {{ key }}">
+            <span>{{ label }}</span>
+            <strong>{{ severity_counts[key] }}</strong>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Findings List -->
+    {% if findings %}
+    <div class="findings-list">
+        {% for f in findings %}
+        <details class="finding-detail {{ f.severity }}">
+            <summary class="finding-summary">
+                <span class="fd-sev">{{ {'critical':'💀','high':'🔴','medium':'🟡','low':'🟢','info':'🔵'}[f.severity] }}</span>
+                <span class="fd-title">{{ f.title }}</span>
+                <span class="fd-module">{{ f.module }}</span>
+                {% if f.verified %}<span class="fd-verified">✓ ~_^</span>{% endif %}
+            </summary>
+            <div class="finding-body">
+                {% if f.url %}
+                <div class="fd-row"><strong>URL:</strong> <code>{{ f.url }}</code></div>
+                {% endif %}
+                {% if f.description %}
+                <div class="fd-row"><strong>Description:</strong> {{ f.description }}</div>
+                {% endif %}
+                {% if f.evidence %}
+                <div class="fd-row">
+                    <strong>Evidence:</strong>
+                    <pre class="fd-evidence">{{ f.evidence }}</pre>
+                </div>
+                {% endif %}
+                {% if f.remediation %}
+                <div class="fd-row fd-fix">
+                    <strong>🔧 Fix:</strong> {{ f.remediation }}
+                </div>
+                {% endif %}
+                {% if f.cve_id %}
+                <div class="fd-row"><strong>📌 CVE:</strong> {{ f.cve_id }}</div>
+                {% endif %}
+            </div>
+        </details>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-emoji">^ - ^</div>
+        <p>No findings in this scan</p>
+    </div>
+    {% endif %}
+
+    <!-- Actions -->
+    <div class="detail-actions">
+        <a href="/results/report/{{ scan.id }}" class="btn btn-primary" target="_blank">
+            📄 Download Report
+        </a>
+    </div>
+</div>
+
+<style>
+.scan-detail-card {
+    padding: 1.5rem;
+    background: var(--surface);
+    border-radius: 1rem;
+    border: 1px solid var(--border);
+}
+.detail-header { margin-bottom: 1rem; }
+.detail-header h3 { margin: 0 0 0.5rem; }
+.detail-meta {
+    display: flex;
+    gap: 1rem;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    flex-wrap: wrap;
+}
+
+.sev-summary {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+}
+.sev-chip {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.4rem 0.8rem;
+    border-radius: 0.5rem;
+    font-size: 0.85rem;
+    background: #f5f5f5;
+    border: 1px solid var(--border);
+    font-weight: 500;
+}
+.sev-chip strong { font-size: 1.1rem; }
+
+.findings-list { display: flex; flex-direction: column; gap: 0.3rem; }
+.finding-detail {
+    border: 1px solid var(--border);
+    border-radius: 0.75rem;
+    overflow: hidden;
+}
+.finding-detail.high { border-left: 4px solid #e74c3c; }
+.finding-detail.medium { border-left: 4px solid #f39c12; }
+.finding-detail.low { border-left: 4px solid #27ae60; }
+.finding-detail.info { border-left: 4px solid #3498db; }
+
+.finding-summary {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.6rem 1rem;
+    cursor: pointer;
+    list-style: none;
+    font-size: 0.9rem;
+}
+.finding-summary::-webkit-details-marker { display: none; }
+.finding-summary:hover { background: #fafafa; }
+.fd-title { flex: 1; }
+.fd-module {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    background: #f5f5f5;
+    padding: 0.15rem 0.4rem;
+    border-radius: 0.3rem;
+}
+.fd-verified { color: #27ae60; font-weight: 700; font-size: 0.8rem; }
+
+.finding-body {
+    padding: 0.8rem 1rem;
+    border-top: 1px solid #f0f0f0;
+    font-size: 0.85rem;
+}
+.fd-row { margin-bottom: 0.5rem; }
+.fd-row code {
+    font-family: monospace;
+    word-break: break-all;
+    color: var(--pink-dark);
+}
+.fd-evidence {
+    background: #2d2d2d;
+    color: #e0e0e0;
+    padding: 0.8rem;
+    border-radius: 0.5rem;
+    font-size: 0.8rem;
+    max-height: 200px;
+    overflow: auto;
+    white-space: pre-wrap;
+    margin-top: 0.3rem;
+}
+.fd-fix {
+    background: #e8f5e9;
+    padding: 0.6rem 0.8rem;
+    border-radius: 0.5rem;
+}
+
+.detail-actions { margin-top: 1.5rem; text-align: center; }
+.empty-state { text-align: center; padding: 2rem; color: var(--text-muted); }
+.empty-emoji { font-size: 2rem; }
+</style>

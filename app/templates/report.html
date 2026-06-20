@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DeepKi Scan Report — {{ target.url }}</title>
+    <style>
+        :root {
+            --pink: #ff69b4;
+            --pink-dark: #e0559a;
+            --pink-light: #ffe0f0;
+            --bg: #fefefe;
+            --text: #2d2d2d;
+            --text-muted: #777;
+            --border: #eee;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--bg); color: var(--text);
+            line-height: 1.6; max-width: 900px; margin: 0 auto; padding: 2rem;
+        }
+
+        .report-header {
+            text-align: center; padding: 2rem 0; border-bottom: 3px solid var(--pink-light);
+            margin-bottom: 2rem;
+        }
+        .report-header h1 {
+            font-size: 2rem; margin-bottom: 0.3rem;
+        }
+        .report-header .emoji { font-size: 2rem; }
+        .report-meta {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem; margin: 2rem 0; padding: 1.5rem; background: #fafafa;
+            border-radius: 1rem; border: 1px solid var(--border);
+        }
+        .meta-item { text-align: center; }
+        .meta-item .label { font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; }
+        .meta-item .value { font-size: 1.1rem; font-weight: 600; }
+
+        .severity-bar {
+            display: flex; gap: 0.5rem; margin-bottom: 2rem;
+        }
+        .sev-item {
+            flex: 1; text-align: center; padding: 1rem; border-radius: 0.75rem;
+            font-weight: 700; color: white;
+        }
+        .sev-critical { background: #8b0000; }
+        .sev-high { background: #e74c3c; }
+        .sev-medium { background: #f39c12; }
+        .sev-low { background: #27ae60; }
+        .sev-info { background: #3498db; }
+        .sev-num { font-size: 2rem; display: block; }
+
+        .finding {
+            margin-bottom: 1.5rem; padding: 1.5rem; border: 1px solid var(--border);
+            border-radius: 1rem; border-left: 4px solid var(--pink);
+        }
+        .finding.critical { border-left-color: #8b0000; }
+        .finding.high { border-left-color: #e74c3c; }
+        .finding.medium { border-left-color: #f39c12; }
+        .finding.low { border-left-color: #27ae60; }
+        .finding.info { border-left-color: #3498db; }
+
+        .finding-header { display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.8rem; }
+        .finding-title { font-size: 1.1rem; font-weight: 600; }
+        .finding-module { font-size: 0.8rem; color: var(--text-muted); }
+        .finding-url { font-family: monospace; font-size: 0.85rem; color: var(--pink-dark); margin-bottom: 0.5rem; word-break: break-all; }
+        .finding-desc { color: #555; margin-bottom: 0.5rem; }
+        .finding-evidence {
+            background: #2d2d2d; color: #e0e0e0; padding: 1rem;
+            border-radius: 0.5rem; font-family: monospace; font-size: 0.8rem;
+            overflow-x: auto; max-height: 300px; overflow-y: auto; white-space: pre-wrap;
+        }
+        .finding-fix {
+            background: #e8f5e9; padding: 0.8rem 1rem; border-radius: 0.5rem;
+            margin-top: 0.8rem; font-size: 0.9rem;
+        }
+        .verified-badge {
+            display: inline-block; background: #27ae60; color: white;
+            padding: 0.2rem 0.6rem; border-radius: 0.3rem; font-size: 0.75rem;
+        }
+
+        .report-footer {
+            text-align: center; margin-top: 3rem; padding-top: 2rem;
+            border-top: 2px solid var(--pink-light);
+        }
+        .report-footer .signature {
+            font-size: 1.2rem; margin-bottom: 0.3rem;
+        }
+        .report-footer .brand {
+            color: var(--pink); font-weight: 700;
+        }
+
+        @media print {
+            body { padding: 0; }
+            .finding { break-inside: avoid; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="report-header">
+    <div class="emoji">(●°u°●)​ 」</div>
+    <h1>DeepKi Security Scan Report</h1>
+    <p>Black-box penetration test — Automated by Xiao Qi</p>
+</div>
+
+<div class="report-meta">
+    <div class="meta-item">
+        <div class="label">Target</div>
+        <div class="value">{{ target.url }}</div>
+    </div>
+    <div class="meta-item">
+        <div class="label">Scan Mode</div>
+        <div class="value">{{ scan.mode }}</div>
+    </div>
+    <div class="meta-item">
+        <div class="label">Started</div>
+        <div class="value">{{ scan.started_at.strftime('%Y-%m-%d %H:%M') if scan.started_at else 'N/A' }}</div>
+    </div>
+    <div class="meta-item">
+        <div class="label">Duration</div>
+        <div class="value">{% if scan.duration_seconds %}{{ '%.1f'|format(scan.duration_seconds) }}s{% else %}N/A{% endif %}</div>
+    </div>
+    <div class="meta-item">
+        <div class="label">Total Findings</div>
+        <div class="value">{{ findings|length }}</div>
+    </div>
+    <div class="meta-item">
+        <div class="label">Verified</div>
+        <div class="value">{{ verified_count }}</div>
+    </div>
+</div>
+
+<!-- Severity breakdown -->
+{% if findings %}
+<div class="severity-bar">
+    <div class="sev-item sev-critical">
+        <span class="sev-num">{{ severity_counts.critical }}</span> Critical
+    </div>
+    <div class="sev-item sev-high">
+        <span class="sev-num">{{ severity_counts.high }}</span> High
+    </div>
+    <div class="sev-item sev-medium">
+        <span class="sev-num">{{ severity_counts.medium }}</span> Medium
+    </div>
+    <div class="sev-item sev-low">
+        <span class="sev-num">{{ severity_counts.low }}</span> Low
+    </div>
+    <div class="sev-item sev-info">
+        <span class="sev-num">{{ severity_counts.info }}</span> Info
+    </div>
+</div>
+
+<!-- Findings -->
+<h2>🐛 Findings</h2>
+{% for f in findings %}
+<div class="finding {{ f.severity }}">
+    <div class="finding-header">
+        <span class="finding-title">
+            [{{ f.severity.upper() }}] {{ f.title }}
+            {% if f.verified %}<span class="verified-badge">✓ Verified ~_^</span>{% endif %}
+        </span>
+        <span class="finding-module">{{ f.module }}</span>
+    </div>
+    {% if f.url %}
+    <div class="finding-url">{{ f.url }}</div>
+    {% endif %}
+    {% if f.description %}
+    <div class="finding-desc">{{ f.description }}</div>
+    {% endif %}
+    {% if f.evidence %}
+    <div class="finding-evidence">{{ f.evidence }}</div>
+    {% endif %}
+    {% if f.remediation %}
+    <div class="finding-fix">
+        <strong>🔧 Fix:</strong> {{ f.remediation }}
+    </div>
+    {% endif %}
+    {% if f.cve_id %}
+    <div style="margin-top:0.5rem; font-size:0.85rem; color:var(--text-muted)">
+        📌 {{ f.cve_id }}
+    </div>
+    {% endif %}
+</div>
+{% endfor %}
+{% else %}
+<div style="text-align:center; padding:3rem; color:var(--text-muted)">
+    <p style="font-size:3rem">^ - ^</p>
+    <p>No findings! The target looks clean... or well-hidden~</p>
+</div>
+{% endif %}
+
+<!-- Footer -->
+<div class="report-footer">
+    <div class="signature">♪───Ｏ（≧∇≦）Ｏ────♪</div>
+    <div>Generated by <span class="brand">Xiao Qi</span></div>
+    <div><span class="brand">DeepKi</span> v1.0 (●°u°●)​ 」</div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,9 @@
+{# DeepKi Target Options — for <select> dropdown #}
+{% if targets %}
+<option value="">🎯 Select a target...</option>
+{% for t in targets %}
+<option value="{{ t.id }}">{{ t.url }}{% if t.label %} — {{ t.label }}{% endif %}</option>
+{% endfor %}
+{% else %}
+<option value="">^ - ^ No targets yet — add one on the Targets page!</option>
+{% endif %}

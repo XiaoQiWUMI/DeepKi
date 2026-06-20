@@ -1,0 +1,39 @@
+{# DeepKi Scan Started — HTMX Partial #}
+<div class="scan-started-card">
+    <div class="started-emoji">(●°u°●)​ 」</div>
+    <h3>Scan Launched!</h3>
+    <p class="started-target">{{ target_url }}</p>
+    <p class="started-msg">Xiao Qi's paws are on the way~</p>
+
+    <!-- Progress area -->
+    <div id="scan-progress-area"
+         hx-get="/scans/{{ scan_id }}/progress"
+         hx-trigger="load delay:1s"
+         hx-swap="innerHTML">
+        <div class="initializing">
+            <span class="dot-pulse">>_<</span> Initializing...
+        </div>
+    </div>
+</div>
+
+<style>
+.scan-started-card {
+    margin-top: 2rem;
+    padding: 1.5rem;
+    background: var(--surface);
+    border-radius: 1.5rem;
+    border: 2px solid var(--pink-light);
+    text-align: center;
+}
+.started-emoji { font-size: 2.5rem; animation: bounce 1.5s infinite; }
+.started-target {
+    font-family: monospace;
+    color: var(--pink-dark);
+    font-weight: 600;
+    margin: 0.5rem 0;
+}
+.started-msg { color: var(--text-muted); }
+.initializing { padding: 2rem; color: var(--text-muted); }
+.dot-pulse { font-size: 1.5rem; animation: pulse 0.8s infinite; display: block; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+</style>

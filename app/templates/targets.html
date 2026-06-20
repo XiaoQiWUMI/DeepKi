@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% block title %}Targets — DeepKi{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="page-header">
+        <h1>🎯 Targets</h1>
+        <p class="text-muted">Add websites for Xiao Qi to scan~ ^ - ^</p>
+    </div>
+
+    <!-- Add Target Form -->
+    <div class="card form-card">
+        <h3 class="card-title">(●°u°●)​ 」 Add New Target</h3>
+        <form hx-post="/targets/add" hx-target="#target-list" hx-swap="innerHTML"
+              hx-on::after-request="this.reset()">
+            <div class="form-group">
+                <label for="url">Target URL *</label>
+                <input type="text" id="url" name="url"
+                       placeholder="https://example.com"
+                       required class="form-input"
+                       pattern="https?://.+|.+\\..+">
+                <small class="form-hint">Full URL or domain (e.g., example.com)</small>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="label">Label</label>
+                    <input type="text" id="label" name="label"
+                           placeholder="My target (optional)"
+                           class="form-input">
+                </div>
+                <div class="form-group">
+                    <label for="description">Description</label>
+                    <input type="text" id="description" name="description"
+                           placeholder="Notes about this target"
+                           class="form-input">
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary">
+                ➕ Add Target
+            </button>
+        </form>
+    </div>
+
+    <!-- Target List -->
+    <div class="section">
+        <h2 class="section-title">📋 Saved Targets</h2>
+        <div id="target-list" hx-get="/targets/list" hx-trigger="load" hx-swap="innerHTML">
+            <div class="loading-placeholder">>_< Loading targets...</div>
+        </div>
+    </div>
+</div>
+
+<style>
+.page-container { max-width: 900px; margin: 0 auto; }
+.page-header { margin-bottom: 2rem; }
+.page-header h1 { font-size: 1.8rem; margin: 0; }
+.text-muted { color: var(--text-muted); }
+
+.form-card {
+    margin-bottom: 2rem;
+    padding: 1.5rem;
+}
+.card-title { margin: 0 0 1rem 0; font-size: 1.1rem; }
+
+.form-group { margin-bottom: 1rem; flex: 1; }
+.form-group label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 0.3rem;
+    color: var(--text);
+}
+.form-input {
+    width: 100%;
+    padding: 0.7rem 1rem;
+    border: 2px solid var(--border);
+    border-radius: 0.75rem;
+    font-size: 0.95rem;
+    background: var(--bg);
+    color: var(--text);
+    transition: border-color 0.2s;
+}
+.form-input:focus {
+    outline: none;
+    border-color: var(--pink);
+    box-shadow: 0 0 0 3px rgba(255, 105, 180, 0.1);
+}
+.form-hint { color: var(--text-muted); font-size: 0.8rem; }
+.form-row { display: flex; gap: 1rem; }
+@media (max-width: 600px) { .form-row { flex-direction: column; } }
+</style>
+{% endblock %}
